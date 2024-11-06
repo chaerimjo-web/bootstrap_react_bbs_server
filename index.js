@@ -2,6 +2,8 @@ const cors = require('cors')
 const express = require('express')
 const app = express()
 const port = 8000
+const multer  = require('multer')
+
 
 //본문을 통해서 넘어온 요청을 파싱(변환) 미들웨어(body-parser)를 이용하여 
 app.use(express.json()); //json형식으로 변환 {"name":"Alice" , "age":"25"}
@@ -12,6 +14,20 @@ var corsOptions = {
 }
 
 app.use(cors(corsOptions));
+app.use("/uploads", express.static('uploads')); //uploads폴더에 접근 권한을 부여한다. 클라이언트가 접속할 수 있도록
+//app.use(express.static('uploads')); //클라이언트가 이 위치에 접근할 수 있음. 
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 5)
+    cb(null, uniqueSuffix + file.originalname)
+  }
+})
+
+const upload = multer({ storage: storage })
 
 const mysql = require('mysql')
 const db = mysql.createConnection({
@@ -24,7 +40,7 @@ const db = mysql.createConnection({
 db.connect()
 /*
 app.get('/', (req, res) => {
-  const sql = "INSERT INTO requested (rowno) VALUES (1)";
+  const sql = "INSERT INTO requested (rowno) VALUES (1)"; 
   db.query(sql, (err, rows, fields) => {
     if (err) throw err;
     res.send('성공')
@@ -51,12 +67,14 @@ app.get('/detail', (req, res) => { //디테일에서 온 요청
     res.send(result)
   })
 })
-app.post('/insert', (req, res) => {
+app.post('/insert', upload.single('image'), (req, res) => {
 
   let title = req.body.title;
   let content = req.body.content;
-  const sql = "INSERT INTO board (BOARD_TITLE, BOARD_CONTENT, REGISTER_ID) VALUES (?,?,'admin')";
-  db.query(sql, [title, content], (err, result) => {
+  let imagePath = req.file? req.file.path : null; //req.files가 있다면path에 있고 없다면 null
+//
+  const sql = "INSERT INTO board (BOARD_TITLE, BOARD_CONTENT, IMAGE_PATH, REGISTER_ID) VALUES (?,?,?,'admin')";
+  db.query(sql, [title, content, imagePath], (err, result) => {
     if (err) throw err;  
     res.send(result);
   })  
