@@ -61,7 +61,7 @@ app.get('/list', (req, res) => { //데이터포맷변경
 app.get('/detail', (req, res) => { //디테일에서 온 요청
   const id = req.query.id;
   console.log(id);
-  const sql = "SELECT BOARD_TITLE, BOARD_CONTENT FROM board WHERE BOARD_ID = ?"; //물음표 ->[id]
+  const sql = "SELECT BOARD_TITLE, BOARD_CONTENT, IMAGE_PATH FROM board WHERE BOARD_ID = ?"; //물음표 ->[id]
   db.query(sql, [id], (err, result) => { //물음표 ->[id]
     if (err) throw err;
     res.send(result)
